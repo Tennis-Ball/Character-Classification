@@ -2,9 +2,6 @@ import numpy as np
 import cv2
 import os
 
-from functions import *
-
-
 def backprop(x, y):
     nabla_b = [np.zeros(b.shape) for b in biases]
     nabla_w = [np.zeros(w.shape) for w in weights]
@@ -64,7 +61,7 @@ def activation_func(activation, input):
         return input
 def activation_func_prime(activation, input):
     if activation == 'sigmoid':
-        return sigmoid(input) * (1 - sigmoid(input))
+        return sigmoid_prime(input)
     elif activation == 'relu':
         return relu_prime(input)
     else:
@@ -80,11 +77,11 @@ def get_data():
     images = []
     labels = []
     for apple_image in os.listdir('Apples/'):
-        image = np.reshape(np.array(cv2.imread('Apples/' + apple_image)).flatten(),(30000,1))
+        image = np.reshape(np.array(cv2.cvtColor(cv2.imread('Apples/' + apple_image), cv2.COLOR_BGR2GRAY)).flatten(),(10000,1)) / 255
         images.append(image)
         labels.append(0)
     for orange_image in os.listdir('Oranges/'):
-        image = np.reshape(np.array(cv2.imread('Oranges/' + orange_image)).flatten(),(30000,1))
+        image = np.reshape(np.array(cv2.cvtColor(cv2.imread('Oranges/' + orange_image), cv2.COLOR_BGR2GRAY)).flatten(),(10000,1)) / 255
         images.append(image)
         labels.append(1)
 
@@ -92,14 +89,12 @@ def get_data():
 
 
 # layers in the format of [('activation function', size int)]
-layers = [("sigmoid", 30000), ("sigmoid", 8), ("sigmoid", 2)]
+layers = [("sigmoid", 10000), ("sigmoid", 10), ("sigmoid", 2)]
 biases = [np.random.randn(y, 1) for (_, y) in layers[1:]]
 weights = [np.random.randn(y, x) for ((_, x), (_, y)) in zip(layers[:-1], layers[1:])]
 
-print(weights)
-
-epochs = 20
-batch_size = 32
+epochs = 200
+batch_size = 20
 learning_rate = 0.1  # learning rate
 training_images, training_labels = get_data()
 training_data = list(zip(training_images, training_labels))
@@ -109,7 +104,7 @@ training_data = training_data[:int(len(training_data) * 0.8)]
 test_data = training_data[int(len(training_data) * 0.8):]
 
 for epoch in range(epochs):
-    print('Epoch:', epoch, 'of', epochs)
+    print('Epoch:', epoch, 'of', epochs, end='\r')
     np.random.shuffle(training_data)
     batches = [training_data[k:k + batch_size] for k in range(0, len(training_data), batch_size)]
     for batch in batches:
@@ -125,5 +120,4 @@ for epoch in range(epochs):
 
 
 test_results = [(np.argmax(feedforward(x)), y) for (x, y) in test_data]
-print(test_results)
 print('accuracy:', sum(int(x == y) for (x, y) in test_results) / len(test_results))
