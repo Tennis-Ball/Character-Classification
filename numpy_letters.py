@@ -116,7 +116,7 @@ def vectorized_result(j):
 
 
 epochs = 50
-batch_size = 8
+batch_size = 64
 learning_rate = 3  # learning rate
 training_images, training_labels = get_data()
 # training_labels = [vectorized_result(y) for y in training_labels]
