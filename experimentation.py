@@ -191,5 +191,3 @@
 # # plt.scatter(range(len(bad0)), bad1, color='orange')
 # # # plt.scatter(range(len(all)), all, color='black')
 # # plt.show()
-import numpy as np
-print(np.argmax([0.4, 0.4]))
