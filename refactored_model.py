@@ -17,13 +17,23 @@ class DenseLayer:  # layer class
         self.weights = 0.10 * np.random.randn(n_inputs, n_neurons)  # initialize 10% standard normal dist. weights
         self.biases = np.zeros((1, n_neurons))  # initialize all biases as 0
 
-    def feed_forward(self, inputs):
+    def forward(self, inputs):
+        self.inputs = inputs
         self.output = np.dot(inputs, self.weights) + self.biases  # forward pass multiplying weights, adding biases
+
+    def backward(self, delta_values):
+        self.delta_weights = np.dot(self.inputs.transpose(), delta_values)  
+        self.delta_biases = np.sum(delta_values, axis=0, keepdims=True)
+        self.delta_inputs = np.dot(delta_values, self.weights.transpose())
 
 
 class ReLUActivation:  # ReLU activation
     def forward(self, inputs):
         self.output = np.maximum(0, inputs)  # 0 if x<0, otherwise x
+
+    def backward(self, delta_values):
+        self.delta_inputs = delta_values.copy()
+        self.delta_inputs[self.output <= 0] = 0 # if x<0, delta will be 0 because curve is flat
 
 
 class SoftmaxActivation:  # Softmax activation
@@ -34,6 +44,12 @@ class SoftmaxActivation:  # Softmax activation
         probabilities = exp_values / np.sum(exp_values, axis=1, keepdims=True)  # probability 0-1 of each class
         self.output = probabilities
 
+    def backward(self, delta_values):
+        self.delta_inputs = np.empty_like(delta_values)
+        for i, (output, delta_value) in enumerate(zip(self.output, delta_values)):
+            output = output.reshape(-1, 1)  # flatten output
+            jacobian = np.diagflat(output) - np.dot(output, output.transpose())  # jacobian matrix
+            self.delta_inputs[i] = np.dot(jacobian, delta_value) 
 
 class Loss:
     def calculate(self, output, y):
@@ -57,6 +73,16 @@ class CategoricalCrossentropy(Loss):
         negative_log_likelihoods = -np.log(correct_confidences)  # loss
         return negative_log_likelihoods
 
+    def backward(self, delta_values, y_true):
+        samples = len(delta_values)
+        labels = len(delta_values[0])
+
+        if len(y_true.shape) == 1:
+            y_true = np.eye(labels)[y_true]
+
+        self.delta_inputs = -y_true / delta_values / samples 
+
+
 
 model = [("relu", 2), ("relu", 4), ("sigmoid", 2)]  # will refactor so this is the model input
 # X, y = "training data", "training labels"
@@ -65,12 +91,12 @@ X, y = spiral_data(100, 3)  # 100 x, y coordinates per class, with 3 classes in 
 
 dense1 = DenseLayer(2, 3)  # define layer with input neurons and output neurons
 activation1 = ReLUActivation()  # define activation (ReLU1, ReLU2, ... ReLUn-1, Softmaxn)
-dense1.feed_forward(X)  # forward pass
+dense1.forward(X)  # forward pass
 activation1.forward(dense1.output)  # pass through activation, activation1.output is layer output
 
 dense2 = DenseLayer(3, 3)
 activation2 = SoftmaxActivation()
-dense2.feed_forward(activation1.output)
+dense2.forward(activation1.output)
 activation2.forward(dense2.output)
 print(activation2.output[:5])
 
