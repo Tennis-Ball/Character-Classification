@@ -29,12 +29,20 @@ class DenseLayer:  # layer class
 
 class ReLUActivation:  # ReLU activation
     def forward(self, inputs):
+        self.inputs = inputs
         self.output = np.maximum(0, inputs)  # 0 if x<0, otherwise x
 
     def backward(self, delta_values):
         self.delta_inputs = delta_values.copy()
         self.delta_inputs[self.output <= 0] = 0 # if x<0, delta will be 0 because curve is flat
 
+class SigmoidActivation:
+    def forward(self, inputs):
+        self.inputs = inputs
+        self.output = 1 / (1 + np.exp(-inputs))
+
+    def backward(self, delta_values):
+        self.delta_inputs = delta_values * (self.output * (1 - self.output))
 
 class SoftmaxActivation:  # Softmax activation
     def forward(self, inputs):
@@ -82,28 +90,49 @@ class CategoricalCrossentropy(Loss):
 
         self.delta_inputs = -y_true / delta_values / samples 
 
+class Model: 
+    def __init__(self):
+        self.layers = []
+
+    def add(self, layer, activation):
+        self.layers.append(layer)
+        self.layers.append(activation)
+
+    def set_loss(self, loss_function):
+        self.loss_function = loss_function
+
+    def loss(self, y):
+        return self.loss_function.calculate(self.layers[-1].output, y)
+
+    def forward(self, inputs):
+        for layer in self.layers:
+            layer.forward(inputs)
+            inputs = layer.output
+        return inputs
+
+    def backward(self, y):
+        self.loss_function.backward(self.layers[-1].output, y)
+        delta_inputs = self.loss_function.delta_inputs
+        for layer in reversed(self.layers):
+            layer.backward(delta_inputs)
+            delta_inputs = layer.delta_inputs
+        #TODO: optimizer
+
+            
 
 
-model = [("relu", 2), ("relu", 4), ("sigmoid", 2)]  # will refactor so this is the model input
+
 # X, y = "training data", "training labels"
 X, y = spiral_data(100, 3)  # 100 x, y coordinates per class, with 3 classes in a spiral pattern
 
+model = Model()
+model.add(DenseLayer(2, 3), ReLUActivation())
+model.add(DenseLayer(3, 3), ReLUActivation())
+model.add(DenseLayer(3, 3), SoftmaxActivation())
+model.set_loss(CategoricalCrossentropy())
 
-dense1 = DenseLayer(2, 3)  # define layer with input neurons and output neurons
-activation1 = ReLUActivation()  # define activation (ReLU1, ReLU2, ... ReLUn-1, Softmaxn)
-dense1.forward(X)  # forward pass
-activation1.forward(dense1.output)  # pass through activation, activation1.output is layer output
+output = model.forward(X)
+print(output)
 
-dense2 = DenseLayer(3, 3)
-activation2 = SoftmaxActivation()
-dense2.forward(activation1.output)
-activation2.forward(dense2.output)
-print(activation2.output[:5])
-
-loss_function = CategoricalCrossentropy()
-loss = loss_function.calculate(activation2.output, y)  # calculate network loss
-print("Loss:", loss)
-
-predictions = np.argmax(activation2.output, axis=1)
-accuracy = np.mean(predictions == y)
-print("Accuracy:", accuracy)
+loss = model.loss(y)
+print(loss)
