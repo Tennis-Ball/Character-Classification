@@ -697,12 +697,14 @@ for epoch in range(10001):
     data_loss = loss_function.calculate(activation3.output, y)
 
     # Calculate regularization penalty
+    # TODO: not implementing rn
     regularization_loss = \
         loss_function.regularization_loss(dense1) + \
         loss_function.regularization_loss(dense2) + \
         loss_function.regularization_loss(dense3)
 
     # Calculate overall loss
+    # TODO: not implementing rn
     loss = data_loss + regularization_loss
 
     # Calculate accuracy from output of activation2 and targets

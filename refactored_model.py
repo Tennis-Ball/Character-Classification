@@ -8,8 +8,7 @@
 import numpy as np
 import nnfs
 from nnfs.datasets import spiral_data  # dataset
-np.random.seed(0)
-nnfs.init()
+nnfs.init()  # sets np.random.seed(0) among other variables
 
 
 class DenseLayer:  # layer class
@@ -36,6 +35,7 @@ class ReLUActivation:  # ReLU activation
         self.delta_inputs = delta_values.copy()
         self.delta_inputs[self.output <= 0] = 0 # if x<0, delta will be 0 because curve is flat
 
+
 class SigmoidActivation:
     def forward(self, inputs):
         self.inputs = inputs
@@ -43,6 +43,7 @@ class SigmoidActivation:
 
     def backward(self, delta_values):
         self.delta_inputs = delta_values * (self.output * (1 - self.output))
+
 
 class SoftmaxActivation:  # Softmax activation
     def forward(self, inputs):
@@ -58,6 +59,7 @@ class SoftmaxActivation:  # Softmax activation
             output = output.reshape(-1, 1)  # flatten output
             jacobian = np.diagflat(output) - np.dot(output, output.transpose())  # jacobian matrix
             self.delta_inputs[i] = np.dot(jacobian, delta_value) 
+
 
 class Loss:
     def calculate(self, output, y):
@@ -90,24 +92,26 @@ class CategoricalCrossentropy(Loss):
 
         self.delta_inputs = -y_true / delta_values / samples 
 
+
 class Model: 
     def __init__(self):
         self.layers = []
 
     def add(self, layer, activation):
-        self.layers.append(layer)
-        self.layers.append(activation)
+        self.layers.append((layer, activation))
+        # self.layers.append(activation)
 
     def set_loss(self, loss_function):
         self.loss_function = loss_function
 
-    def loss(self, y):
-        return self.loss_function.calculate(self.layers[-1].output, y)
+    def loss(self, true_y):
+        return self.loss_function.calculate(self.layers[-1][1].output, true_y)
 
     def forward(self, inputs):
         for layer in self.layers:
-            layer.forward(inputs)
-            inputs = layer.output
+            layer[0].forward(inputs)  # feed inputs forward through dense layer
+            layer[1].forward(layer[0].output)  # feed dense layer outputs forward through activation
+            inputs = layer[1].output
         return inputs
 
     def backward(self, y):
@@ -117,9 +121,6 @@ class Model:
             layer.backward(delta_inputs)
             delta_inputs = layer.delta_inputs
         #TODO: optimizer
-
-            
-
 
 
 # X, y = "training data", "training labels"
@@ -132,7 +133,11 @@ model.add(DenseLayer(3, 3), SoftmaxActivation())
 model.set_loss(CategoricalCrossentropy())
 
 output = model.forward(X)
-print(output)
+print('Output shape:', output.shape)
 
 loss = model.loss(y)
-print(loss)
+print('Model loss:', loss)
+
+predictions = np.argmax(output, axis=1)
+accuracy = np.mean(np.absolute(predictions - y) < np.std(y) / 250)
+print('Accuracy:', accuracy)
