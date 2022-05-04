@@ -50,7 +50,6 @@ class DenseLayer:  # layer class
 
 # Adam optimizer
 class Optimizer_Adam:
-
     # Initialize optimizer - set settings
     def __init__(self, learning_rate=0.001, decay=0., epsilon=1e-7,
                  beta_1=0.9, beta_2=0.999):
@@ -155,7 +154,7 @@ class CategoricalCrossentropy(Loss):
         # correct_confidences is the largest value (most confident) in output batch
         if len(y_true.shape) == 1:  # if sparse [0, 1]
             correct_confidences = y_pred_clipped[range(samples), y_true]
-        elif len(y_true.shape) == 2:  # if one-hot encoded [[1, 0], [0, 1]]
+        else:  # if one-hot encoded [[1, 0], [0, 1]]
             correct_confidences = np.sum(y_pred_clipped*y_true, axis=1)
 
         negative_log_likelihoods = -np.log(correct_confidences)  # loss
@@ -218,19 +217,33 @@ class Model:
             self.optimizer.update_params(layer[0])
         self.optimizer.post_update_params()
 
-    def train(self,epochs, X, y):
+    def train(self, epochs, batch_size, X, y):
         for epoch in range(epochs):
-            output = self.forward(X)  # forward pass
+            # TODO: shuffle X and y
+            permutation = np.random.permutation(len(X))  # create random permutation
+            X, y = X[permutation], y[permutation]  # shuffle dataset
+
+            if not batch_size:  # if batch_size == None pass entire dataset
+                self.forward(X)  # forward pass
+                self.backward(y)  # backwards pass
+                self.optimize()  # Adam optimization of weights and biases
+
+            else:
+                X_batches = [X[k:k + batch_size] for k in range(0, len(X), batch_size)]
+                y_batches = [y[k:k + batch_size] for k in range(0, len(y), batch_size)]
+
+                for X_batch, y_batch in zip(X_batches, y_batches):  # update w + b for each batch
+                    self.forward(X_batch)  # forward pass
+                    self.backward(y_batch)  # backwards pass
+                    self.optimize()  # Adam optimization of weights and biases
 
             if epoch % 100 == 0:
+                accuracy_output = self.forward(X)
                 loss = self.loss(y)  # calculate loss
 
-                predictions = np.argmax(output, axis=1)
+                predictions = np.argmax(accuracy_output, axis=1)
                 accuracy = np.mean(np.absolute(predictions - y) < np.std(y) / 250)  # calculate accuracy
                 print(f'Epoch {epoch} of {epochs} - Loss: {loss}, Accuracy: {accuracy}')
-
-            self.backward(y)  # backwards pass
-            self.optimize()  # Adam optimization of weights and biases
 
 
 # X, y = "training data", "training labels"
@@ -244,5 +257,4 @@ model.add(DenseLayer(8, 3), SoftmaxActivation())
 model.set_loss(CategoricalCrossentropy())
 model.set_optimizer(Optimizer_Adam(learning_rate=0.005, decay=1e-3))
 
-model.train(epochs=1000, X=X, y=y)
-
+model.train(epochs=1000, batch_size=None, X=X, y=y)
