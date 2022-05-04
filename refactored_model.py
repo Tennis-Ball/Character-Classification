@@ -6,10 +6,31 @@
 # calculate loss with categorical crossentropy (negative log)
 # optimize w & b
 import numpy as np
-import matplotlib.pyplot as plt
+import cv2
+import os
 import nnfs
 from nnfs.datasets import spiral_data  # dataset
 nnfs.init()  # sets np.random.seed(0) among other variables
+
+
+def get_data():
+    images = []
+    labels = []
+    data = ['Apples', 'Oranges']
+    for i in range(len(data)):
+        for image in os.listdir('data/' + data[i]):
+            try:
+                image = cv2.imread('data/' + data[i] + '/' + image)
+                image = cv2.resize(image, (0, 0), None, 0.25, 0.25)  # reduce image dimension
+                # image = np.array(cv2.cvtColor(image, cv2.COLOR_BGR2GRAY))
+                image = np.reshape(image, (-1,))
+                image = image / 255
+                images.append(image)
+                labels.append(i)
+            except Exception as e:
+                print(e)
+
+    return images, labels
 
 
 class DenseLayer:  # layer class
@@ -154,7 +175,7 @@ class CategoricalCrossentropy(Loss):
         # correct_confidences is the largest value (most confident) in output batch
         if len(y_true.shape) == 1:  # if sparse [0, 1]
             correct_confidences = y_pred_clipped[range(samples), y_true]
-        else:  # if one-hot encoded [[1, 0], [0, 1]]
+        elif len(y_true.shape) == 2:  # if one-hot encoded [[1, 0], [0, 1]]
             correct_confidences = np.sum(y_pred_clipped*y_true, axis=1)
 
         negative_log_likelihoods = -np.log(correct_confidences)  # loss
@@ -209,7 +230,6 @@ class Model:
             layer[0].backward(layer[1].delta_inputs)  # layer backwards pass
             delta_inputs = layer[0].delta_inputs
         return delta_inputs
-        #TODO: optimizer
 
     def optimize(self):
         self.optimizer.pre_update_params()
@@ -219,7 +239,6 @@ class Model:
 
     def train(self, epochs, batch_size, X, y):
         for epoch in range(epochs):
-            # TODO: shuffle X and y
             permutation = np.random.permutation(len(X))  # create random permutation
             X, y = X[permutation], y[permutation]  # shuffle dataset
 
@@ -246,14 +265,17 @@ class Model:
                 print(f'Epoch {epoch} of {epochs} - Loss: {loss}, Accuracy: {accuracy}')
 
 
-# X, y = "training data", "training labels"
-X, y = spiral_data(100, 3)  # 100 x, y coordinates per class, with 3 classes in a spiral pattern
+# X, y = spiral_data(100, 3)  # 100 x, y coordinates per class, with 3 classes in a spiral pattern
+# print(X.shape, y.shape)
+X, y = get_data()
+X, y = np.array(X), np.array(y)
+print(X.shape, y.shape)
 
 model = Model()
-model.add(DenseLayer(2, 16), ReLUActivation())
+model.add(DenseLayer(X.shape[1], 16), ReLUActivation())
 model.add(DenseLayer(16, 32), ReLUActivation())
 model.add(DenseLayer(32, 8), ReLUActivation())
-model.add(DenseLayer(8, 3), SoftmaxActivation())
+model.add(DenseLayer(8, 2), SoftmaxActivation())
 model.set_loss(CategoricalCrossentropy())
 model.set_optimizer(Optimizer_Adam(learning_rate=0.005, decay=1e-3))
 
