@@ -218,20 +218,19 @@ class Model:
             self.optimizer.update_params(layer[0])
         self.optimizer.post_update_params()
 
-    @staticmethod  # just because model.train() looks nicer
-    def train(epochs):
+    def train(self,epochs, X, y):
         for epoch in range(epochs):
-            output = model.forward(X)  # forward pass
+            output = self.forward(X)  # forward pass
 
             if epoch % 100 == 0:
-                loss = model.loss(y)  # calculate loss
+                loss = self.loss(y)  # calculate loss
 
                 predictions = np.argmax(output, axis=1)
                 accuracy = np.mean(np.absolute(predictions - y) < np.std(y) / 250)  # calculate accuracy
                 print(f'Epoch {epoch} of {epochs} - Loss: {loss}, Accuracy: {accuracy}')
 
-            model.backward(y)  # backwards pass
-            model.optimize()  # Adam optimization of weights and biases
+            self.backward(y)  # backwards pass
+            self.optimize()  # Adam optimization of weights and biases
 
 
 # X, y = "training data", "training labels"
@@ -245,5 +244,5 @@ model.add(DenseLayer(8, 3), SoftmaxActivation())
 model.set_loss(CategoricalCrossentropy())
 model.set_optimizer(Optimizer_Adam(learning_rate=0.005, decay=1e-3))
 
-model.train(epochs=1000)
+model.train(epochs=1000, X=X, y=y)
 
