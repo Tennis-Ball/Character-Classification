@@ -692,6 +692,7 @@ for epoch in range(10001):
     # Perform a forward pass through activation function
     # takes the output of third dense layer here
     activation3.forward(dense3.output)
+    print(activation3.output.shape, end=' ')
 
     # Calculate the data loss
     data_loss = loss_function.calculate(activation3.output, y)
@@ -731,6 +732,7 @@ for epoch in range(10001):
     dense2.backward(activation2.dinputs)
     activation1.backward(dense2.dinputs)
     dense1.backward(activation1.dinputs)
+    print(dense1.dinputs.shape)
 
     # Update weights and biases
     optimizer.pre_update_params()
