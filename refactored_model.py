@@ -5,6 +5,8 @@
 # feed forward to get output layer output
 # calculate loss with categorical crossentropy (negative log)
 # optimize w & b
+import json
+import os
 import numpy as np
 import cv2
 import os
@@ -34,9 +36,12 @@ def get_data():
 
 
 class DenseLayer:  # layer class
-    def __init__(self, n_inputs, n_neurons):
-        self.weights = 0.10 * np.random.randn(n_inputs, n_neurons)  # initialize 10% standard normal dist. weights
-        self.biases = np.zeros((1, n_neurons))  # initialize all biases as 0
+    def __init__(self, n_neurons):
+        self.n_neurons = n_neurons
+
+    def create(self, n_inputs):
+        self.weights = 0.10 * np.random.randn(n_inputs, self.n_neurons)
+        self.biases = np.zeros((1, self.n_neurons))
 
     def forward(self, inputs):
         self.inputs = inputs
@@ -67,6 +72,13 @@ class DenseLayer:  # layer class
             self.dbiases += 2 * self.bias_regularizer_l2 * self.biases
         """
         self.delta_inputs = np.dot(delta_values, self.weights.transpose())
+
+    def json(self):
+        return {
+            'type': 'Dense',
+            'weights': self.weights.tolist(),
+            'biases': self.biases.tolist()
+        }
 
 
 # Adam optimizer
@@ -131,6 +143,9 @@ class ReLUActivation:  # ReLU activation
         self.delta_inputs = delta_values.copy()
         self.delta_inputs[self.output <= 0] = 0  # if x<0, delta will be 0 because curve is flat
 
+    def json(self):
+        return 'ReLU'
+
 
 class SigmoidActivation:
     def forward(self, inputs):
@@ -139,6 +154,9 @@ class SigmoidActivation:
 
     def backward(self, delta_values):
         self.delta_inputs = delta_values * (self.output * (1 - self.output))
+
+    def json(self):
+        return 'Sigmoid'
 
 
 class SoftmaxActivation:  # Softmax activation
@@ -157,6 +175,9 @@ class SoftmaxActivation:  # Softmax activation
             # Calculate sample-wise gradient
             # and add it to the array of sample gradients
             self.delta_inputs[i] = np.dot(jacobian, delta_value)
+
+    def json(self):
+        return 'Softmax'
 
 
 class Loss:
@@ -238,6 +259,12 @@ class Model:
         self.optimizer.post_update_params()
 
     def train(self, epochs, batch_size, X, y):
+        #create weights and biases for each layer
+        layer_size = X.shape[1]
+        for layer in self.layers:
+            layer[0].create(layer_size)
+            layer_size = layer[0].n_neurons
+
         for epoch in range(epochs):
             permutation = np.random.permutation(len(X))  # create random permutation
             X, y = X[permutation], y[permutation]  # shuffle dataset
@@ -264,6 +291,14 @@ class Model:
                 accuracy = np.mean(np.absolute(predictions - y) < np.std(y) / 250)  # calculate accuracy
                 print(f'Epoch {epoch} of {epochs} - Loss: {loss}, Accuracy: {accuracy}')
 
+    def json(self):
+        # calls the json functions of each layer, which contains weights, biases, and type of activation
+        # i don't believe we would need loss function or optimizer if we are only feeding forwards.
+        data = [
+            {'layer': layer[0].json(), 'activation': layer[1].json()} for layer in self.layers
+        ]
+        return json.dumps(data)
+
 
 # X, y = spiral_data(100, 3)  # 100 x, y coordinates per class, with 3 classes in a spiral pattern
 # print(X.shape, y.shape)
@@ -272,11 +307,16 @@ X, y = np.array(X), np.array(y)
 print(X.shape, y.shape)
 
 model = Model()
-model.add(DenseLayer(X.shape[1], 16), ReLUActivation())
-model.add(DenseLayer(16, 32), ReLUActivation())
-model.add(DenseLayer(32, 8), ReLUActivation())
-model.add(DenseLayer(8, 2), SoftmaxActivation())
+model.add(DenseLayer(16), ReLUActivation())
+model.add(DenseLayer(32), ReLUActivation())
+model.add(DenseLayer(8), ReLUActivation())
+model.add(DenseLayer(2), SoftmaxActivation())
 model.set_loss(CategoricalCrossentropy())
 model.set_optimizer(Optimizer_Adam(learning_rate=0.005, decay=1e-3))
 
 model.train(epochs=1000, batch_size=None, X=X, y=y)
+
+#save model.json() to file model.json
+with open('model.json', 'w') as f:
+    f.write(model.json())
+
