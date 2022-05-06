@@ -53,5 +53,5 @@ model.train(epochs=1000, batch_size=None, X=X, y=y)
 
 #save model.json() to file model.json
 with open('model.json', 'w') as f:
-    f.write(model.json())
+    f.write("model = " + model.json())
 
