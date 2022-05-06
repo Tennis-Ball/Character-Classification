@@ -38,7 +38,7 @@ function forward(model, input) {
     for (var i = 0; i < model.length; i++) {
         weighted = multiply(output, model[i].layer.weights);
         biased  = add(weighted, model[i].layer.biases);
-        switch (model[i].layer.activation) {
+        switch (model[i].activation) {
             case 'Sigmoid':
                 output = sigmoid(biased);
                 break;
