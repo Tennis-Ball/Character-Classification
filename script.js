@@ -370,5 +370,11 @@ let input =
  1.        , 1.        , 1.        , 1.        , 1.        , 1.,
  1.        , 1.        , 1.        ]
 
-console.log(forward(model,input))
+function predict() {
+	var output = forward(model, input);
+	console.log(output);
+	console.log(Math.max(output[0], output[1]));
+	var prediction = output.indexOf(Math.max(output));
+	document.getElementById("prediction").innerHTML = prediction;	
+}
 
