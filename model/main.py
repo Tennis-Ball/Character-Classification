@@ -59,13 +59,14 @@ X, y = np.array(X), np.array(y)
 print(X.shape, y.shape)
 
 model = Model()
-model.add(DenseLayer(64), ReLUActivation())
 model.add(DenseLayer(128), ReLUActivation())
+model.add(DenseLayer(64), ReLUActivation())
+model.add(DenseLayer(64), ReLUActivation())
 model.add(DenseLayer(47), SoftmaxActivation())
 model.set_loss(CategoricalCrossentropy())
 model.set_optimizer(Optimizer_Adam(learning_rate=0.005, decay=1e-3))
 
-model.train(epochs=100, batch_size=None, X=X, y=y)
+model.train(epochs=200, batch_size=128, X=X, y=y, Xv=None, yv=None)
 
 #save model.json() to file model.json
 with open('model.json', 'w') as f:

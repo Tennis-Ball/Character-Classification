@@ -224,7 +224,22 @@ class Model:
             self.optimizer.update_params(layer[0])
         self.optimizer.post_update_params()
 
-    def train(self, epochs, batch_size, X, y):
+    def evaluate(self, X_train, y_train, X_val, y_val, epoch, epochs):
+        train_accuracy_output = self.forward(X_train)
+        train_loss = self.loss(y_train)  # calculate loss
+        train_predictions = np.argmax(train_accuracy_output, axis=1)
+        train_accuracy = np.mean(np.absolute(train_predictions - y_train) < np.std(y_train) / 250)  # calculate accuracy
+
+        if X_val:
+            val_accuracy_output = self.forward(X_val)
+            val_loss = self.loss(y_val)  # calculate loss
+            val_predictions = np.argmax(val_accuracy_output, axis=1)
+            val_accuracy = np.mean(np.absolute(val_predictions - y_val) < np.std(y_val) / 250)
+            print(f'Epoch {epoch} of {epochs} - Loss: {train_loss}, Accuracy: {train_accuracy}, Validation Loss: {val_loss}, Validation Accuracy: {val_accuracy}')
+        else:
+            print(f'Epoch {epoch} of {epochs} - Loss: {train_loss}, Accuracy: {train_accuracy}')
+
+    def train(self, epochs, batch_size, X, y, Xv, yv):
         #create weights and biases for each layer
         layer_size = X.shape[1]
         for layer in self.layers:
@@ -250,13 +265,14 @@ class Model:
                     self.optimize()  # Adam optimization of weights and biases
 
             if epoch % 10 == 0 or epoch == epochs - 1:
-                accuracy_output = self.forward(X)
-                loss = self.loss(y)  # calculate loss
-
-                predictions = np.argmax(accuracy_output, axis=1)
-                accuracy = np.mean(np.absolute(predictions - y) < np.std(y) / 250)  # calculate accuracy
-                print(f'Epoch {epoch} of {epochs} - Loss: {loss}, Accuracy: {accuracy}')
-        print(f'Final accuracy: {accuracy}')
+                self.evaluate(X, y, Xv, yv, epoch, epochs)
+        #         accuracy_output = self.forward(X)
+        #         loss = self.loss(y)  # calculate loss
+        #
+        #         predictions = np.argmax(accuracy_output, axis=1)
+        #         accuracy = np.mean(np.absolute(predictions - y) < np.std(y) / 250)  # calculate accuracy
+        #         print(f'Epoch {epoch} of {epochs} - Loss: {loss}, Accuracy: {accuracy}')
+        # print(f'Final accuracy: {accuracy}')
 
     def json(self):
         # calls the json functions of each layer, which contains weights, biases, and type of activation
@@ -265,5 +281,3 @@ class Model:
             {'layer': layer[0].json(), 'activation': layer[1].json()} for layer in self.layers
         ]
         return json.dumps(data)
-
-

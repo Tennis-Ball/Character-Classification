@@ -56,6 +56,7 @@ function forward(model, input) {
 
 function predict(input) {
     var output = forward(model, input);
+    console.log(output);
     let labelMap = {
         0: 48,
         1: 49,
@@ -104,9 +105,9 @@ function predict(input) {
         44: 113,
         45: 114,
         46: 116,
-    }
-    let predictions = Object.entries(output[0]).sort((a,b)=>a[1] > b[1])
-    console.log(predictions.map(x => String.fromCharCode(labelMap[x[0]])))
+    };
+    let predictions = Object.entries(output[0]).sort((a,b)=>a[1] > b[1]);
+    console.log(predictions.map(x => String.fromCharCode(labelMap[x[0]])));
     document.getElementById("prediction").innerHTML = String.fromCharCode(labelMap[predictions[0][0]]);
 }
 
