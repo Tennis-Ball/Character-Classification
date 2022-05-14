@@ -373,8 +373,12 @@ let input =
 function predict() {
 	var output = forward(model, input);
 	console.log(output);
-	console.log(Math.max(output[0], output[1]));
-	var prediction = output.indexOf(Math.max(output));
-	document.getElementById("prediction").innerHTML = prediction;	
+	var prediction = output[0].indexOf(Math.max(output[0][0], output[0][1]));
+	if (prediction == 0) {
+		var prediction_class = "Apple";
+	} else {
+		var prediction_class = "Orange";
+	}
+	document.getElementById("prediction").innerHTML = prediction_class;
 }
 

@@ -249,13 +249,14 @@ class Model:
                     self.backward(y_batch)  # backwards pass
                     self.optimize()  # Adam optimization of weights and biases
 
-            if epoch % 100 == 0:
+            if epoch % 10 == 0 or epoch == epochs - 1:
                 accuracy_output = self.forward(X)
                 loss = self.loss(y)  # calculate loss
 
                 predictions = np.argmax(accuracy_output, axis=1)
                 accuracy = np.mean(np.absolute(predictions - y) < np.std(y) / 250)  # calculate accuracy
                 print(f'Epoch {epoch} of {epochs} - Loss: {loss}, Accuracy: {accuracy}')
+        print(f'Final accuracy: {accuracy}')
 
     def json(self):
         # calls the json functions of each layer, which contains weights, biases, and type of activation
