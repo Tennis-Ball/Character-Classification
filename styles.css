@@ -21,6 +21,7 @@ body > * {
 
 canvas {
     width: 60vmin;
+    max-width: 60%;
     image-rendering: crisp-edges;
     image-rendering: -moz-crisp-edges;
     image-rendering: -webkit-crisp-edges;
@@ -95,6 +96,7 @@ button:active{
     }
     canvas {
         width: 100%;
+        max-width: 100%;
     }
 
     #predictions {
