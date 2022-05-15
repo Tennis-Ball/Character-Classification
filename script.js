@@ -112,8 +112,19 @@ canvas.addEventListener("mousemove", (e)=>{
     drawCanvas()
 })
 
+canvas.addEventListener("touchmove",(e)=>{
+    e.preventDefault()
+    rect = canvas.getBoundingClientRect()
+    mouseX = Math.floor((e.touches[0].clientX - rect.left)/rect.width * canvas.width)
+    mouseY = Math.floor((e.touches[0].clientY - rect.top)/rect.height * canvas.height)
+    drawCanvas()
+})
+
 canvas.addEventListener("mousedown", ()=>{mouseIsDown = true;drawCanvas() })
 window.addEventListener("mouseup", ()=>{mouseIsDown = false;drawCanvas() })
+
+canvas.addEventListener("touchstart", ()=>{mouseIsDown = true;drawCanvas() })
+window.addEventListener("touchend", ()=>{mouseIsDown = false;drawCanvas() })
 
 function drawCanvas(){
     if(prevMouseX == mouseX && prevMouseY == mouseY){return}
