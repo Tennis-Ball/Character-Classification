@@ -1,4 +1,6 @@
 # Character Classification
+Try it out!: https://tennis-ball.github.io/Character-Classification/
+
 A simple web application that classifies characters based on human drawing input
 
 - Draw any digit 0-9 or distinguishable letters--lowercase or uppercase!
