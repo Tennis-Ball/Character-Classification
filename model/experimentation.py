@@ -3,7 +3,7 @@ import tensorflow_datasets as tfds
 import numpy as np
 
 # Construct a tf.data.Dataset
-ds = tfds.load('emnist/balanced', split='train', shuffle_files=True)
+ds, test = tfds.load('emnist/balanced', split=['train', 'test'], shuffle_files=True)
 images = []
 labels = []
 # Build your input pipeline

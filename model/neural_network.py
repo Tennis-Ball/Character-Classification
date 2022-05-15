@@ -230,7 +230,7 @@ class Model:
         train_predictions = np.argmax(train_accuracy_output, axis=1)
         train_accuracy = np.mean(np.absolute(train_predictions - y_train) < np.std(y_train) / 250)  # calculate accuracy
 
-        if X_val:
+        if X_val is not None:
             val_accuracy_output = self.forward(X_val)
             val_loss = self.loss(y_val)  # calculate loss
             val_predictions = np.argmax(val_accuracy_output, axis=1)
@@ -264,7 +264,7 @@ class Model:
                     self.backward(y_batch)  # backwards pass
                     self.optimize()  # Adam optimization of weights and biases
 
-            if epoch % 10 == 0 or epoch == epochs - 1:
+            if epoch % 1 == 0 or epoch == epochs - 1:
                 self.evaluate(X, y, Xv, yv, epoch, epochs)
         #         accuracy_output = self.forward(X)
         #         loss = self.loss(y)  # calculate loss
