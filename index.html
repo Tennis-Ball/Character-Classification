@@ -10,13 +10,14 @@
     <title>Neural Networks</title>
 </head>
 <body>
-    <div class="center">
-	<div class="horizontal">
-	    <h1>Digit Recognizer</h1>
-	    <button onclick="resetCanvas()"> reset </button>
-	</div>
-	<p id="prediction"></p>
+    <div class="horizontal">
+	<h1>Digit Recognizer</h1>
+	<button onclick="resetCanvas()"> reset </button>
+    </div>
+    <div class="horizontal" id="center">
 	<canvas id="canvas" width="28" height="28">canvas isn't supported </canvas>
+	<ol id="predictions">
+	</ol>	
     </div>
 </body>
 </html>

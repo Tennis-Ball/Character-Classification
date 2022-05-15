@@ -6,8 +6,8 @@ html, body {
 
 body{
     padding: 30px 15px;
-    display: flex;
     max-width: 800px;
+    margin: auto;
 }
 
 body > * {
@@ -20,11 +20,12 @@ body > * {
 }
 
 canvas {
-    width: 100%;
+    width: 60vmin;
     image-rendering: crisp-edges;
     image-rendering: -moz-crisp-edges;
     image-rendering: -webkit-crisp-edges;
     image-rendering: pixelated;
+    border-radius: 3px
 }
 
 .horizontal {
@@ -38,7 +39,7 @@ button{
     background-color:white;
     font-size: 1em;
     padding: 10px 20px;
-    border-radius: 5px;
+    border-radius: 3px;
     transition: background-color 0.2s, transform 0.2s;
 }
 
@@ -50,4 +51,53 @@ button:hover{
 button:active{
     background-color: rgba(0,0,0,0.1);
     transform: scale(0.95);
+}
+
+#center {
+    align-items: start;
+}
+
+#predictions {
+    flex-grow: 1;
+    border: 1px solid rgba(0,0,0,0.2);
+    border-radius: 3px;
+    padding: 20px 15px;
+    list-style-type:none;
+    margin: 0;
+}
+
+#predictions li {
+    margin: 5px 0px;
+}
+
+#predictions li span {
+    width: 75px;
+}
+
+#predictions .bar {
+    height: 1.5em;
+    display: inline-block;
+    background-color: rgba(0,0,0,0.1);
+    border-radius: 3px;
+    width: 100px;
+    overflow: hidden;
+}
+
+#predictions .bar div {
+    height: 100%;
+    background-color: black;
+    border-radius: 3px;
+}
+
+@media (max-width: 600px){
+    #center {
+        flex-direction: column;
+    }
+    canvas {
+        width: 100%;
+    }
+
+    #predictions {
+        width: 100%;
+    }
 }

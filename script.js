@@ -60,8 +60,16 @@ function predict(input) {
         0: 48, 1: 49, 2: 50, 3: 51, 4: 52, 5: 53, 6: 54, 7: 55, 8: 56, 9: 57, 10: 65, 11: 66, 12: 67, 13: 68, 14: 69, 15: 70, 16: 71, 17: 72, 18: 73, 19: 74, 20: 75, 21: 76, 22: 77, 23: 78, 24: 79, 25: 80, 26: 81, 27: 82, 28: 83, 29: 84, 30: 85, 31: 86, 32: 87, 33: 88, 34: 89, 35: 90, 36: 97, 37: 98, 38: 100, 39: 101, 40: 102, 41: 103, 42: 104, 43: 110, 44: 113, 45: 114, 46: 116,
     };
     let predictions = Object.entries(output[0]).sort((a,b)=>a[1] < b[1]);
-    console.log(predictions.map(x => String.fromCharCode(labelMap[x[0]])));
-    document.getElementById("prediction").innerHTML = String.fromCharCode(labelMap[predictions[0][0]]);
+    //let letters = predictions.map(x => String.fromCharCode(labelMap[x[0]]))
+    let predContainer = document.querySelector("#predictions")
+    predContainer.innerHTML = ""
+    predictions.slice(0,10).forEach((prediction) => {
+        let li = document.createElement('li')
+        li.classList.add("horizontal")
+        li.innerHTML = `<span>${String.fromCharCode(labelMap[prediction[0]])}: ${Math.round(prediction[1] * 1000) / 10}% </span> <div class="bar"><div style="width: ${prediction[1] * 100}%"></div></div>`
+        predContainer.appendChild(li)
+    })
+
 }
 
 //init canvas
@@ -119,4 +127,5 @@ function drawCanvas(){
 function resetCanvas(){
     input = Array(28).fill(0).map(() => Array(28).fill(0))
     updateCanvas(input)
+    document.querySelector("#predictions").innerHTML = ""
 }
