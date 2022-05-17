@@ -59,8 +59,8 @@ def get_data():
         image = np.rot90(image, 3)  # rotate once clockwise to adjust for readability
         image = np.flip(image, 1)  # flip horizontally to adjust for readability
         # change pixels to 0 or 1, depending on threshold
-        np.place(image, image < 125, [0])
-        np.place(image, image >= 125, [1])
+        np.place(image, image < 150, [0])
+        np.place(image, image >= 150, [1])
         image = np.reshape(image, (-1,))
 
         val_images.append(image)
